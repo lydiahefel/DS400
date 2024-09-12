@@ -65,7 +65,7 @@ df <- list(diet, tiid, bhg, uhg)
 df <- df %>% reduce(full_join, by = 'SEQN')
 ```
 
-1.  Filter Dataframe df for the following:
+Filter Dataframe df for the following:
 
 ```{r}
 # Assuming your dataframe is named `nhanes_data`
@@ -82,13 +82,62 @@ df <- df %>%
   
 ```
 
-2.  Do some exploratory data analysis
-3.  Determine the prior probability that someone has diabetes (DIQ010)
-    -   P(B)
-4.  Determine the prior probability that someone eats tuna (DRD370B)
-    -   P(A)
-5.  Determine the likelihood of eating tuna and having diabetes
-    -   L(B\|A)
-6.  Determine posterior probability via bayes theorem
-    -   P(B\|A)
-7.  What other questions can we ask of this data?
+Do some exploratory data analysis
+
+-   Determine the prior probability that someone has diabetes (DIQ010)
+    -   P(B) = 0.13
+
+```{r}
+df %>% 
+  tabyl(DIQ010) %>% 
+  adorn_totals("row")
+```
+
+```{r}
+prior_probability_has_diabetes <- 0.13
+```
+
+-   Determine the prior probability that someone eats tuna (DRD370B)
+    -   P(A) = 0.36
+
+```{r}
+df %>% 
+  tabyl(DRD370B) %>% 
+  adorn_totals("row")
+```
+
+```{r}
+prior_probability_eats_tuna <- 0.36
+```
+
+-   Determine the likelihood of eating tuna and having diabetes
+    -   L(B\|A) = 0.36
+
+```{r}
+df %>% 
+  tabyl(DRD370B, DIQ010) %>% 
+  adorn_percentages("col")
+```
+
+```{r}
+likelihood_eats_tuna_has_diabetes <- 0.36
+```
+
+-   Determine posterior probability via bayes theorem
+    -   P(B\|A) = 0.13
+
+```{r}
+(prior_probability_has_diabetes * likelihood_eats_tuna_has_diabetes) / prior_probability_eats_tuna
+```
+
+-   What other questions can we ask of this data?
+
+    -   How would an individual's race impact the prior probability of having diabetes or eating tuna?
+
+    -   How would an individual's age impact the prior probability of having diabetes or eating tuna?
+
+    -   How would an individual's gender impact the prior probability of having diabetes or eating tuna?
+
+    -   How would these varying demographic factors impact the likelihood of having diabetes and eating tuna?
+
+    -   How would these varying demographic factors impact the posterior probability of having diabetes and eating tuna?
