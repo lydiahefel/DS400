@@ -4,7 +4,7 @@ format: html
 editor: visual
 ---
 
-### Load Libraries
+## Load Libraries
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -16,7 +16,7 @@ library(ggplot2)
 library(janitor)
 ```
 
-### Read-in Datasets for this Analysis:
+## Read-in Datasets for this Analysis:
 
 -   DR1TOT_J.xpt as 'diet_behavior'
 -   2017-2018_Hg-Blood.XPT as 'blood_hg'
@@ -31,7 +31,7 @@ diabetes <- read_xpt(here("data/nhanes_data/2017-2018_Diabetes.XPT"))
 demographics <- read_xpt(here("data/nhanes_data/2017-2018_Demographics.XPT"))
 ```
 
-### Subset Read-in Datasets
+## Subset Read-in Datasets
 
 Subset 'diet_behavior' as 'diet'
 
@@ -57,7 +57,7 @@ Subset "urine_hg' as 'uhg'
 uhg <- select(urine_hg, SEQN, URXUHG)
 ```
 
-### Merge Subsets Into A Working Dataframe as 'df'
+## Merge Subsets Into A Working Dataframe as 'df'
 
 ```{r}
 df <- list(diet, tiid, bhg, uhg)
@@ -76,42 +76,98 @@ df <- df %>%
   filter(DIQ010 %in% c(1, 2), DRD370B %in% c(1, 2)) %>%
   # Recode 1 to "Yes" and 2 to "No" for DIQ010 and DRD360
   mutate(
-    DIQ010 = ifelse(DIQ010 == 1, "Yes", "No"),
-    DRD370B = ifelse(DRD370B == 1, "Yes", "No")
+    DIQ010 = ifelse(DIQ010 == 1, "Has Diabetes", "No Diabetes"),
+    DRD370B = ifelse(DRD370B == 1, "Consumes Ahi", "No Ahi")
   )
   
 ```
 
-Do some exploratory data analysis
+### Exploratory Data Analysis - On Your Own
 
 -   Determine the prior probability that someone has diabetes (DIQ010)
     -   P(B) = 0.13
 
 ```{r}
-df %>% 
-  tabyl(DIQ010) %>% 
-  adorn_totals("row")
+#df %>% 
+#  tabyl(DIQ010) %>% 
+#  adorn_totals("row")
 ```
 
 ```{r}
-prior_probability_has_diabetes <- 0.13
+#prior_probability_has_diabetes <- 0.13
 ```
 
--   Determine the prior probability that someone eats tuna (DRD370B)
+-   Determine the prior probability that someone consumes ahi (DRD370B)
     -   P(A) = 0.36
 
 ```{r}
-df %>% 
-  tabyl(DRD370B) %>% 
-  adorn_totals("row")
+#df %>% 
+#  tabyl(DRD370B) %>% 
+#  adorn_totals("row")
 ```
 
 ```{r}
-prior_probability_eats_tuna <- 0.36
+#prior_probability_consumes_ahi <- 0.36
 ```
 
--   Determine the likelihood of eating tuna and having diabetes
+-   Determine the likelihood of consuming ahi and having diabetes
     -   L(B\|A) = 0.36
+
+```{r}
+#df %>% 
+#  tabyl(DRD370B, DIQ010) %>% 
+#  adorn_percentages("col")
+```
+
+```{r}
+#likelihood_consumes_ahi_has_diabetes <- 0.36
+```
+
+-   Determine posterior probability via bayes theorem
+    -   P(B\|A) = 0.13
+
+```{r}
+#(prior_probability_has_diabetes * likelihood_consumes_ahi_has_diabetes) / prior_probability_consumes_ahi
+```
+
+-   What other questions can we ask of this data?
+
+    -   How would an individual's race impact the prior probability of having diabetes or consuming ahi?
+
+    -   How would an individual's age impact the prior probability of having diabetes or consuming ahi?
+
+    -   How would an individual's gender impact the prior probability of having diabetes or consuming ahi?
+
+    -   How would these varying demographic factors impact the likelihood of having diabetes and consuming ahi?
+
+    -   How would these varying demographic factors impact the posterior probability of having diabetes and consuming ahi?
+
+### Bayes Theorem - In Class
+
+$$
+P(B \mid A) = \frac{P(B) L(B \mid A)}{P(A)} 
+$$
+
+B \<- Has Diabetes
+
+A \<- Consumes Ahi
+
+#### P(B)
+
+The probability that a person has diabetes. P(B) = 0.13
+
+```{r}
+df %>% 
+  tabyl(DIQ010)
+```
+
+```{r}
+probability_has_diabetes <- 0.13
+```
+
+#### L(B\|A) = P(A\|B)
+
+The likelihood that a person has diabetes given that they consume ahi is equal to the probability that a person consumes ahi given that they have diabetes. L(B\|A) = 0.36
 
 ```{r}
 df %>% 
@@ -120,24 +176,111 @@ df %>%
 ```
 
 ```{r}
-likelihood_eats_tuna_has_diabetes <- 0.36
+probability_consumes_ahi_given_has_diabetes <- 0.36
 ```
 
--   Determine posterior probability via bayes theorem
-    -   P(B\|A) = 0.13
+#### P(A)
+
+The probability that a person consumes ahi. P(A) = 0.36
 
 ```{r}
-(prior_probability_has_diabetes * likelihood_eats_tuna_has_diabetes) / prior_probability_eats_tuna
+df %>% 
+  tabyl(DRD370B)
 ```
 
--   What other questions can we ask of this data?
+```{r}
+probability_consumes_ahi <- 0.36
+```
 
-    -   How would an individual's race impact the prior probability of having diabetes or eating tuna?
+#### P(B\|A) 
 
-    -   How would an individual's age impact the prior probability of having diabetes or eating tuna?
+Posterior Probability: The probability that a person has diabetes given that they consume ahi. P(B\|A) = 0.13 \*Not much of a difference
 
-    -   How would an individual's gender impact the prior probability of having diabetes or eating tuna?
+```{r}
+(probability_has_diabetes * probability_consumes_ahi_given_has_diabetes) / probability_consumes_ahi
+```
 
-    -   How would these varying demographic factors impact the likelihood of having diabetes and eating tuna?
+```{r}
+posterior_probability_has_diabetes_given_consumes_ahi <- 0.13
+```
 
-    -   How would these varying demographic factors impact the posterior probability of having diabetes and eating tuna?
+### Bayes Theorem - Diabetes & Age- On Your Own
+
+$$
+P(B \mid A) = \frac{P(B) L(B \mid A)}{P(A)} 
+$$
+
+B \<- Has Diabetes
+
+A \<- Over 40
+
+```{r}
+demographics <- demographics %>% 
+  select(SEQN, RIDRETH1, RIAGENDR, RIDAGEYR)
+```
+
+```{r}
+nhanes_data <- left_join(df, demographics, by = "SEQN")
+```
+
+```{r}
+nhanes_data <- nhanes_data %>% 
+  mutate(age_bracket = ifelse(RIDAGEYR > 40, "Over 40", "Under 40"))
+```
+
+```{r}
+ggplot(nhanes_data, aes(x = RIDAGEYR, fill = DIQ010)) +
+  geom_density(alpha = 0.5)
+```
+
+#### P(B)
+
+The probability that a person has diabetes. P(B) = 0.13
+
+```{r}
+nhanes_data %>% 
+  tabyl(DIQ010)
+```
+
+```{r}
+probability_has_diabetes
+```
+
+#### L(B\|A) = P(A\|B)
+
+The likelihood that a person has diabetes given that they are over 40 years old is equal to the probability that a person is over 40 years old given that they have diabetes. L(B\|A) = 0.96
+
+```{r}
+nhanes_data %>% 
+  tabyl(DIQ010, age_bracket) %>% 
+  adorn_percentages("row")
+```
+
+```{r}
+probability_over_40_given_has_diabetes <- 0.96
+```
+
+#### P(A)
+
+The probability that a person is over 40 years old. P(A) = 0.53
+
+```{r}
+nhanes_data %>% 
+  tabyl(age_bracket)
+```
+
+```{r}
+probability_over_40 <- 0.53
+```
+
+#### P(BIA)
+
+Posterior Probability: The probability that a person has diabetes given that they are over 40 years old. P(BIA) = 0.24
+
+```{r}
+(probability_has_diabetes * probability_over_40_given_has_diabetes) / probability_over_40
+```
+
+```{r}
+posterior_probability_has_diabetes_given_over_40 <- 0.24
+```
