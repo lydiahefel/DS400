@@ -99,3 +99,52 @@ penguins %>%
 ```{r}
 naive_model_hints
 ```
+
+## Find Gentoo - On Your Own
+
+#### Species
+
+```{r}
+penguins %>% 
+  tabyl(species)
+```
+
+#### Flipper Length
+
+```{r}
+dnorm(195, mean = 217.1870, sd = 6.484976)
+```
+
+#### Bill Length
+
+```{r}
+dnorm(50, mean = 47.50488, sd = 3.081857)
+```
+
+#### Above Average Weight
+
+```{r}
+penguins %>% 
+  tabyl(species, above_average_weight) %>% 
+  adorn_percentages("row")
+```
+
+probability (gentoo) \* probability (gentoo \| 195 mm flipper) \* probability (gentoo \| 50 mm bill) \* probability (under average weight \| gentoo)
+
+```{r}
+probs_gentoo <- (124/342) * 0.0001767016 * 0.09327439 * 0.0483871
+probs_gentoo
+```
+
+### Sum of Probabilities
+
+```{r}
+sum_of_probs <- probs_adelie + probs_chinstrap + probs_gentoo
+sum_of_probs
+```
+
+### Probability Chinstrap
+
+```{r}
+probs_chinstrap / sum_of_probs
+```
