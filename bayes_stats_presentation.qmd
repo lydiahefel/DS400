@@ -1,0 +1,143 @@
+---
+title: "Bayesian Statistics Presentation"
+author: "Lydia Hefel"
+format: html
+editor: visual
+---
+
+## Bayesian Regression - Olympic Data
+
+#### Background
+
+-   Women were first allowed to compete in the Olympics starting in 1900. This began with only 22 competitors, making up only 2.2 percent of all participants. This created a positive trend has continue to grow the number of women competitors as athletes continue to fight for gender equality in sports. This past summer, history was made at the 2024 Olympics in Paris as it was the first time there was exactly the same number of women competitors as there was men competitors.
+
+#### Goal
+
+-   How will a Bayesian Regression Model help to predict the change in the percentage of women participation in the Olympics for future years?
+
+#### Libraries
+
+```{r, warning = FALSE, message = FALSE}
+library(readr)
+library(here)
+library(janitor)
+library(dplyr)
+library(ggplot2)
+library(rstan)
+library(rstanarm)
+library(plotly)
+library(bayesplot)
+```
+
+#### Data
+
+```{r, warning = FALSE, message = FALSE}
+athlete_participation <- read_csv(here("data/athlete_participation.csv"))
+
+athlete_participation <- athlete_participation %>% 
+  clean_names()
+```
+
+#### EDA
+
+```{r}
+ggplot(athlete_participation, aes(x = year, y = percent_of_women_participants, fill = sports)) + 
+  geom_col()
+```
+
+```{r}
+ggplot(athlete_participation, aes(x = year, y = percent_of_women_participants, color = percent_of_women_participants)) + 
+  geom_point()
+```
+
+#### Temporary Model - Women's Olympic Participation
+
+```{r, warning = FALSE, message = FALSE}
+temporary_model <- stan_glm(percent_of_women_participants ~ year, data = athlete_participation,
+                            family = gaussian,
+                            prior_intercept = normal(5000, 1000),
+                            prior = normal(100, 40), 
+                            prior_aux = exponential(0.0008),
+                            chains = 4, iter = 5000*2, seed = 84735)
+```
+
+```{r}
+temporary_model
+```
+
+#### Prediction - Temporary Model
+
+```{r}
+temp_prediction <- posterior_predict(temporary_model, newdata = data.frame(year = 2024))
+
+temp_prediction_2024 <- mcmc_dens(temp_prediction) + 
+  xlab("prediction of percent women participation at 2024 olympics")
+
+ggplotly(temp_prediction_2024)
+```
+
+#### Interpretation - Temporary Model
+
+-   The `temporary_model` predicts `percent_of_women_participants` as a function of `year`.
+
+-   The intercept prediction suggests -726.5 percent of competitors at the Olympics in year 0 were women. The MAD_SD of 52.4 reflects high uncertainty in this prediction
+
+-   The slope for `year` is 0.4 percent, it is predicted that for every passing year the participation of women athletes in the Olympics will increase by an average of 0.4 percent. The MAD_SDof 0.0 suggests no uncertainty in this prediction.
+
+-   The sigma value of 4.9 indicates that the actual percentage of women participants deviates from the model predictions by an average of about 4.9 percent - reflecting moderate variability.
+
+-   The `temporary_model` was used to create a prediction based on the year 2024. The predicted `percent_of_women_participants` for the 2024 Olympics was roughly 42 percent.
+
+#### Final Model - Women's Olympic Participation
+
+-   The inclusion of the number of women participants will hopefully increase the accuracy and decrease the uncertainty of this model. The exclusion of event data is due to the fact that there is no data for mixed events, thus `womens_events` and `percent_of_womens_events` is no representative of all events that include women participation.
+
+```{r}
+final_model <- stan_glm(percent_of_women_participants ~ year + women_participants,
+                        data = athlete_participation,
+                        family = gaussian,
+                        chains = 4, 
+                        iter = 5000, 
+                        seed = 84735)
+```
+
+```{r}
+final_model
+```
+
+#### Prediction - Final Model
+
+```{r}
+final_prediction <- posterior_predict(final_model, newdata = data.frame(year = 2024, women_participants = 5250))
+```
+
+```{r}
+final_prediction_2024 <- mcmc_dens(final_prediction) + 
+  xlab("new prediction of percent women participation at 2024 olympics")
+
+ggplotly(final_prediction_2024)
+```
+
+#### Interpretation - Final Model
+
+-   The `final_model` predicts `percent_of_women_participants` as a function of `year` and `women_participants`.
+
+-   The intercept prediction suggests -282.1 percent of competitors at the Olympics were women when `year` is 0 and `women_participants` is 0. The MAD_SD of 35.0 reflects high uncertainty in this prediction, yet is lower than the previous prediction.
+
+-   The slope for `year` is 0.1 percent, it is predicted that for every passing year the participation of women athletes in the Olympics will increase by an average of 0.1 percent, given that `women_participants` remains constant. The MAD_SDof 0.0 suggests no uncertainty in this prediction.
+
+-   The slope for `women_participants` is 0.0 percent, it is predicted that the number of women participants has no significant effect on the percentage of women participants.
+
+-   The sigma value of 1.6 indicates that the actual percentage of women participants deviates from the model predictions by an average of about 1.6 percent - reflecting moderate variability.
+
+-   The `final_model` was used to create a prediction based on the year 2024. The predicted `percent_of_women_participants` for the 2024 Olympics was roughly 48 percent.
+
+#### Results + Limitations
+
+-   The `temporary_model` and the `final_model` both had higher levels of uncertainty when predicting the intercept. These levels are understandable considering the data begins with 1900. Although the ancient Olympics began thousands of years ago, the modern Olympics started much more recently, thus there is no necessary reason to look into the uncertainty of the percentage of women participants in the Olympics in year 0.
+
+-   When using the two models to predict the `percent_of_women_participants` for the 2024 Olympics, the `temporary_model` predicted roughly 42 percent, while the `final_model` predicted roughly 48 percent. The actual percentage was 50, there was the same amount of women competitors as men competitors. The `final_model` had a more accurate prediction than the `temporary_model`, which is as hypothesized.
+
+-   The two models had similar slopes for `year`, 0.4 an 0.1. The two models had the same MAD_SD of 0.0, which meant that there was no uncertainty in the predictions. The two models had sigma values of 4.9 and 1.6, which meant there was moderate variability in the model based on these deviations from the actual percentages.
+
+-   The most concerning output was the slope for `women_participants` in the `final_model`. The slope was 0.0, which meant that the number of women participants had no significant effect on the percentage of women participants. This was very alarming considering the number of women participants is a large factor in determining the percentage of women participants. However, the dataset used for these models is very limited. There are only seven variables, and only accounts for 27 Olympic Games. The seven variables, although including the number and percent of women participants, do not include the number of men participants or the number of total participants. My hypothesis is that if these variables were included, the model would have greater accuracy and a better understanding of the correlation between number and percent of women participants.
