@@ -13,7 +13,11 @@ editor: visual
 
 #### Goal
 
--   How will a Bayesian Regression Model help to predict the change in the percentage of women participation in the Olympics for future years? (A Bayesian Regression Model will be used as it predicts continuous values and the main variable being used is the percentage of women participation, a continuous variable.)
+-   How will a Bayesian Regression Model help to predict the change in the percentage of women participation in the Olympics for future years?
+
+#### Method
+
+-   A Bayesian Regression Model will be used as it predicts continuous values and the main variable being used is the percentage of women participation, a continuous variable.
 
 #### Libraries
 
@@ -52,7 +56,7 @@ ggplot(athlete_participation, aes(x = year, y = percent_of_women_participants, c
 
 #### Temporary Model - Women's Olympic Participation
 
-```{r, warning = FALSE, message = FALSE}
+```{r, warning = FALSE, message = FALSE, results = 'hide'}
 temporary_model <- stan_glm(percent_of_women_participants ~ year, data = athlete_participation,
                             family = gaussian,
                             prior_intercept = normal(5000, 1000),
@@ -92,7 +96,7 @@ ggplotly(temp_prediction_2024)
 
 -   The inclusion of the number of women participants will hopefully increase the accuracy and decrease the uncertainty of this model. The exclusion of event data is due to the fact that there is no data for mixed events, thus `womens_events` and `percent_of_womens_events` is no representative of all events that include women participation.
 
-```{r}
+```{r, warning = FALSE, message = FALSE, results = 'hide'}
 final_model <- stan_glm(percent_of_women_participants ~ year + women_participants,
                         data = athlete_participation,
                         family = gaussian,
