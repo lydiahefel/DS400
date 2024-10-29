@@ -13,7 +13,7 @@ editor: visual
 
 #### Goal
 
--   How will a Bayesian Regression Model help to predict the change in the percentage of women participation in the Olympics for future years?
+-   How will a Bayesian Regression Model help to predict the change in the percentage of women participation in the Olympics for future years? (A Bayesian Regression Model will be used as it predicts continuous values and the main variable being used is the percentage of women participation, a continuous variable.)
 
 #### Libraries
 
